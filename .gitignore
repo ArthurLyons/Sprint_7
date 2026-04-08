@@ -1,0 +1,23 @@
+# Виртуальное окружение
+venv/
+.venv/
+
+# Python кэши
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Результаты Allure (не коммитим, генерируем локально)
+allure-results/
+allure-report/
+
+# Логи
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
