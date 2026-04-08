@@ -1,14 +1,12 @@
 import pytest
-import requests
 import random
 import string
-
-BASE_URL = "https://qa-scooter.praktikum-services.ru/api/v1"
+from config import BASE_URL
+from helpers.api_helpers import post_request
 
 def generate_random_string(length):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for _ in range(length))
-
 
 @pytest.fixture
 def courier_data():
@@ -26,7 +24,8 @@ def courier_data():
             "firstName": first_name
         }
 
-        response = requests.post(f"{BASE_URL}/courier", data=payload)
+        response = post_request(f"{BASE_URL}/courier", payload)
+
         if response.status_code == 201:
             courier = {
                 "login": login,
@@ -47,7 +46,7 @@ def courier_data():
             "login": courier["login"],
             "password": courier["password"]
         }
-        login_response = requests.post(f"{BASE_URL}/login", data=login_payload)
+        login_response = post_request(f"{BASE_URL}/login", login_payload)
         if login_response.status_code == 200:
             courier_id = login_response.json().get("id")
             if courier_id:

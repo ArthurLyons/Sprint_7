@@ -1,20 +1,22 @@
 import allure
 import pytest
-import requests
-
-BASE_URL = "https://qa-scooter.praktikum-services.ru/api/v1"
+from config import BASE_URL, EXPECTED_STATUS_CODES, EXPECTED_ERROR_MESSAGES
+from helpers.api_helpers import post_request
 
 @allure.feature("Создание курьера")
 class TestCourierCreation:
 
-    @allure.story("Успешное создание курьера")
+    @allure.title("Успешное создание курьера")
+    @allure.story("Регистрация нового курьера с корректными данными")
     def test_create_courier_success(self, courier_data):
         courier = courier_data()
         assert courier is not None
-        assert courier["response"].status_code == 201
-        assert courier["response"].json() == {"ok": True}
+        assert courier["response"].status_code == EXPECTED_STATUS_CODES['create_courier_success']
+        response_json = courier["response"].json()
+        assert response_json == {"ok": True}
 
-    @allure.story("Нельзя создать дублирующего курьера")
+    @allure.title("Попытка создания дублирующего курьера")
+    @allure.story("Проверка запрета регистрации курьера с существующим логином")
     def test_cannot_create_duplicate_courier(self, courier_data):
         # Создаём первого курьера
         first_courier = courier_data()
@@ -26,16 +28,22 @@ class TestCourierCreation:
             "password": first_courier["password"],
             "firstName": first_courier["first_name"]
         }
-        response = requests.post(f"{BASE_URL}/courier", data=payload)
-        assert response.status_code == 409
+        response = post_request(f"{BASE_URL}/courier", payload)
+        assert response.status_code == EXPECTED_STATUS_CODES['create_courier_duplicate']
+        response_json = response.json()
+        assert "message" in response_json
+        assert response_json["message"] == EXPECTED_ERROR_MESSAGES['duplicate_courier']
 
     @pytest.mark.parametrize("missing_field", ["login", "password", "firstName"])
-    @allure.story("Проверка обязательных полей")
+    @allure.title("Проверка отсутствия обязательного поля: {missing_field}")
+    @allure.story("Валидация обязательных полей при создании курьера")
     def test_missing_required_fields(self, missing_field):
         login, password, first_name = "testlogin", "testpass", "testname"
         payload = {"login": login, "password": password, "firstName": first_name}
         del payload[missing_field]
 
-        response = requests.post(f"{BASE_URL}/courier", data=payload)
-        assert response.status_code in [400, 404]
-        assert "message" in response.json()
+        response = post_request(f"{BASE_URL}/courier", payload)
+        assert response.status_code == EXPECTED_STATUS_CODES['create_courier_missing_field']
+        response_json = response.json()
+        assert "message" in response_json
+        assert response_json["message"] == EXPECTED_ERROR_MESSAGES['missing_required_field']
