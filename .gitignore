@@ -9,10 +9,6 @@ __pycache__/
 *.pyd
 .Python
 
-# Результаты Allure (не коммитим, генерируем локально)
-allure-results/
-allure-report/
-
 # Логи
 *.log
 
