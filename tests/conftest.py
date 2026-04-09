@@ -1,16 +1,11 @@
 import pytest
-import random
-import string
-from config import BASE_URL
-from helpers.api_helpers import post_request
+from config.config import BASE_URL, EXPECTED_STATUS_CODES
+from helpers.api_helpers import post_request, generate_random_string
 
-def generate_random_string(length):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for _ in range(length))
 
 @pytest.fixture
 def courier_data():
-    """Фикстура для создания и удаления курьера"""
+    """Фикстура: создаёт курьера и очищает после теста"""
     created_couriers = []
 
     def _create_courier():
@@ -26,7 +21,7 @@ def courier_data():
 
         response = post_request(f"{BASE_URL}/courier", payload)
 
-        if response.status_code == 201:
+        if response.status_code == EXPECTED_STATUS_CODES['create_courier_success']:
             courier = {
                 "login": login,
                 "password": password,
@@ -39,16 +34,30 @@ def courier_data():
 
     yield _create_courier
 
-    # Очистка созданных курьеров
+    # Очистка: попытка удалить курьера (если API поддержит в будущем)
     for courier in created_couriers:
-        # Получаем ID курьера через логин/пароль
         login_payload = {
             "login": courier["login"],
             "password": courier["password"]
         }
         login_response = post_request(f"{BASE_URL}/login", login_payload)
-        if login_response.status_code == 200:
+        if login_response.status_code == EXPECTED_STATUS_CODES['login_success']:
             courier_id = login_response.json().get("id")
             if courier_id:
-                # Здесь можно добавить запрос на удаление курьера, если API поддерживает
+                # Пока API не поддерживает удаление, оставляем заглушку
                 pass
+
+
+@pytest.fixture
+def created_courier_id(courier_data):
+    """Фикстура: создаёт курьера и возвращает его ID"""
+    courier = courier_data()
+    assert courier is not None
+
+    login_payload = {
+        "login": courier["login"],
+        "password": courier["password"]
+    }
+    login_response = post_request(f"{BASE_URL}/login", login_payload)
+    assert login_response.status_code == EXPECTED_STATUS_CODES['login_success']
+    return login_response.json()["id"]

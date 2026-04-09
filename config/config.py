@@ -1,7 +1,5 @@
 BASE_URL = "https://qa-scooter.praktikum-services.ru/api/v1"
 
-
-# Ожидаемые коды ответов из документации API
 EXPECTED_STATUS_CODES = {
     'create_courier_success': 201,
     'create_courier_duplicate': 409,
@@ -12,7 +10,6 @@ EXPECTED_STATUS_CODES = {
     'orders_list_success': 200
 }
 
-# Ожидаемые сообщения об ошибках
 EXPECTED_ERROR_MESSAGES = {
     'missing_required_field': 'Недостаточно данных для создания курьера',
     'duplicate_courier': 'Этот логин уже используется. Попробуйте другой.',
