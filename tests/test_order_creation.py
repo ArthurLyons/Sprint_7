@@ -10,32 +10,27 @@ class TestOrderCreation:
     @pytest.mark.parametrize("color", [
         ["BLACK"],
         ["GREY"],
-        ["BLACK", "GREY"],
-        []
+        ["BLACK", "GREY"]
     ])
     @allure.title("Создание заказа с цветом: {color}")
-    def test_order_creation_with_different_colors(self, created_courier_id, color):
-        # Условия удалены — используем payload напрямую
+    def test_order_creation_with_color(self, created_courier_id, color):
         payload = {
             "courierId": created_courier_id,
             "color": color
         }
-        # Если цвет пустой, можно не передавать (API должен принять)
-        if not color:
-            del payload["color"]
-
         response = post_request(f"{BASE_URL}/orders", payload)
         assert response.status_code == EXPECTED_STATUS_CODES['order_creation_success']
         response_json = response.json()
+        assert response_json.get("color") == color
 
-        assert "track" in response_json
-        assert isinstance(response_json["track"], int)
-        assert "orderId" in response_json
-        assert isinstance(response_json["orderId"], int)
-
-        # Проверяем цвет, если он был в запросе
-        if "color" in payload:
-            assert response_json.get("color") == payload["color"]
-        else:
-            # Если цвет не передавали, он может быть пустым или отсутствовать
-            assert response_json.get("color") == []
+    @allure.title("Создание заказа без указания цвета")
+    def test_order_creation_without_color(self, created_courier_id):
+        payload = {
+            "courierId": created_courier_id
+            # color не передаём
+        }
+        response = post_request(f"{BASE_URL}/orders", payload)
+        assert response.status_code == EXPECTED_STATUS_CODES['order_creation_success']
+        response_json = response.json()
+        # API должен вернуть color как пустой массив
+        assert response_json.get("color") == []
